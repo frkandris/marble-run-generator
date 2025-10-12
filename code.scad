@@ -2,7 +2,7 @@
 length_studs = 16;  // Length in studs (16mm each)
 
 // Curved piece parameters  
-inner_radius_cavities = 8;  // Arc length in cavity units (32mm each) - controls front/back connection points
+inner_radius_studs = 5;  // Inner radius in studs (16mm each)
 
 // Common parameters
 start_width_studs = 8;
@@ -51,8 +51,8 @@ cavity_pitch_mm = DUPLO_BOX_SIZE();
 // Straight pieces: use length_studs (snapped to 2-stud grid)
 length_studs_snapped = snap_to_duplo_grid(length_studs);
 
-// Curved pieces: use inner_radius_cavities (in cavity/32mm units)
-inner_radius_cavities_snapped = max(1, round(inner_radius_cavities));
+// Curved pieces: use inner_radius_studs (in stud/16mm units)
+inner_radius_studs_snapped = max(2, round(inner_radius_studs));
 
 // Width - will be overridden for curved pieces to ensure grid alignment
 W0_input = snap_to_duplo_grid(start_width_studs) * PITCH();
@@ -63,46 +63,19 @@ T0   = max(thickness_mm, MIN_THICK());
 T1   = T0 + DROP;
 
 // Calculate geometry based on piece type
-// For curved pieces: back edge must align with cavity grid for Duplo compatibility
-// The back edge is at angle ±aabs/2, spanning from inner_r to outer_r
-// We need to find Rmid such that back edge corners land on 32mm grid intersections
+// For curved pieces: use simple radius and width calculations
+// Duplo grid will be clipped to piece footprint
 
-// Start with target arc length as a reference
-arc_length_target = is_straight ? 0 : (inner_radius_cavities_snapped * cavity_pitch_mm);
-Rmid_initial = is_straight ? 0 : (arc_length_target / abs(ang_rad));
-
-// For curved: calculate grid-aligned geometry
-// At 45° angle, for perfect grid alignment:
-// 1. Inner radius = k × 32√2 (so Y-coord is multiple of 32)
-// 2. Rmid = n × 32 (so X-coord is multiple of 32)
-// 3. Width derived from these: width = 2×(Rmid - inner_r)
-sqrt2 = sqrt(2);
-
-// Step 1: Inner radius aligned to diagonal grid  
-// inner_r = k × 32√2 for some integer k
-inner_r_grid_aligned = round((Rmid_initial - max(W0_input, W1_input)/2) / (cavity_pitch_mm * sqrt2)) * (cavity_pitch_mm * sqrt2);
-
-// Step 2: Outer radius ALSO aligned to diagonal grid
-// outer_r = m × 32√2 for some integer m > k
-// Start with input width to estimate, then snap
-outer_r_estimated = inner_r_grid_aligned + max(W0_input, W1_input);
-outer_r_grid_aligned = round(outer_r_estimated / (cavity_pitch_mm * sqrt2)) * (cavity_pitch_mm * sqrt2);
-
-// Step 3: Initial width from aligned radii
-width_initial = outer_r_grid_aligned - inner_r_grid_aligned;
-
-// Step 4: Snap both inner and outer radii to diagonal grid
-// This ensures both are k × 32√2
-// Keep width as close to input as possible while maintaining grid alignment
-width_grid_aligned = outer_r_grid_aligned - inner_r_grid_aligned;
-
-// Step 5: Rmid from snapped radii
-Rmid_grid_aligned = inner_r_grid_aligned + width_grid_aligned / 2;
+// Curved piece geometry
+inner_r_curved = inner_radius_studs_snapped * PITCH();
+width_curved = max(W0_input, W1_input);
+outer_r_curved = inner_r_curved + width_curved;
+Rmid_curved = inner_r_curved + width_curved / 2;
 
 // Final values
-Rmid = is_straight ? 0 : Rmid_grid_aligned;
-W0 = is_straight ? W0_input : width_grid_aligned;
-W1 = is_straight ? W1_input : width_grid_aligned;
+Rmid = is_straight ? 0 : Rmid_curved;
+W0 = is_straight ? W0_input : width_curved;
+W1 = is_straight ? W1_input : width_curved;
 
 // L is the actual length (straight) or arc length (curved)
 L = is_straight ? (length_studs_snapped * PITCH())
@@ -113,9 +86,9 @@ module build(){
   if (is_straight)
     echo("Straight length (studs, mm) =", length_studs, "→", length_studs_snapped, "studs,", L, "mm");
   else {
-    echo("Curved target arc length =", inner_radius_cavities, "→", inner_radius_cavities_snapped, "×32 =", arc_length_target, "mm");
-    echo("Rmid (grid-aligned) =", Rmid_initial, "→", Rmid, "mm, Arc length =", L, "mm");
-    echo("Inner radius =", inner_r_grid_aligned, "mm, Width (grid-aligned) =", width_grid_aligned, "mm");
+    echo("Curved: inner_r =", inner_radius_studs, "→", inner_radius_studs_snapped, "studs =", inner_r_curved, "mm");
+    echo("Rmid =", Rmid, "mm, Arc length =", L, "mm");
+    echo("Width =", width_curved, "mm (from max of start/end width)");
   }
   if (is_straight)
     echo("W0/W1 (stud, mm) =", start_width_studs, "→", snap_to_duplo_grid(start_width_studs), "/", end_width_studs, "→", snap_to_duplo_grid(end_width_studs), "studs,", W0, "/", W1, "mm");
