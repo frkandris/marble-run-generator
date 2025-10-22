@@ -134,8 +134,20 @@ module straight_piece(){
           cube([W1, rim_thickness_mm, rim_height_mm], center=false);
     }
     
-    // Add Duplo attachment features on bottom
-    duplo_attachment_features(max(W0, W1), L, 0);
+    // Add Duplo attachment features on bottom, clipped to piece footprint
+    intersection(){
+      duplo_attachment_features(max(W0, W1), L, 0);
+      
+      // Bounding volume: extruded hull matching piece footprint
+      translate([0, 0, -20])
+        linear_extrude(height=20.1)
+          hull(){
+            translate([0, -L/2])
+              rect2d(W0, 0.01);
+            translate([0,  L/2])
+              rect2d(W1, 0.01);
+          }
+    }
   }
 }
 
