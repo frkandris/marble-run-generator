@@ -2,12 +2,22 @@
 
 Parametric OpenSCAD generator for 3D-printable marble run tracks that snap together using DUPLO-compatible attachment features.
 
+## Try it Online
+
+You can use this generator directly in your browser on **MakerWorld's Parametric Model Maker**:
+
+🔗 **[https://makerworld.com/en/makerlab/parametricModelMaker](https://makerworld.com/en/makerlab/parametricModelMaker)**
+
+Simply upload the `code.scad` file and adjust parameters interactively without installing OpenSCAD.
+
 ## Features
 
 - **Straight and curved (90°) track pieces**
+- **Tapered pieces**: Different widths at entry and exit for funnel/expansion effects
 - **DUPLO-compatible base**: Snap onto DUPLO bricks or connect pieces together using 32mm cavity grid
 - **Parametric design**: Adjust width, length, thickness, slope, and rim height
 - **Axis-aligned grid**: Duplo cavities always align with global X/Y axes for reliable connections
+- **Smart cavity clipping**: Bottom attachment features automatically clip to piece footprint, preventing uncapped edges
 
 ## Parameters
 
@@ -47,6 +57,13 @@ The generator creates attachment features on the bottom of each piece:
 
 ## Usage
 
+### Option 1: Online (MakerWorld)
+1. Visit [MakerWorld Parametric Model Maker](https://makerworld.com/en/makerlab/parametricModelMaker)
+2. Upload `code.scad`
+3. Adjust parameters in the web interface
+4. Generate and download your STL
+
+### Option 2: Local (OpenSCAD)
 1. Open `code.scad` in OpenSCAD
 2. Adjust parameters at the top of the file
 3. Press **F5** to preview
@@ -75,6 +92,14 @@ turn_angle_deg = 90;
 ```scad
 length_studs = 16;
 slope_stud = 1;  // 1 stud height drop over length
+```
+
+**Tapered funnel:**
+```scad
+length_studs = 16;
+start_width_studs = 4;  // Narrow entry
+end_width_studs = 8;    // Wide exit
+turn_angle_deg = 0;
 ```
 
 ## Design Notes
@@ -122,7 +147,8 @@ This project is open source. Feel free to modify and share!
 
 Current version implements:
 - Straight and 90° curved pieces
-- Parametric width, thickness, slope
-- DUPLO-compatible attachment grid
-- Axis-aligned cavity placement
-- Simplified geometry calculations
+- Tapered pieces with independent start/end widths
+- Parametric width, length, thickness, slope, and rim controls
+- DUPLO-compatible attachment grid with proper cavity clipping
+- Axis-aligned cavity placement for reliable connections
+- Footprint-aware cavity generation (no uncapped edges on tapered pieces)
